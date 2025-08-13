@@ -1,0 +1,26 @@
+<resources>
+    <!-- Default screen margins, per the Android Design guidelines. -->
+    <dimen name="activity_margin_xxsmall">2dp</dimen>
+    <dimen name="activity_margin_xsmall">6dp</dimen>
+    <dimen name="activity_margin_small">12dp</dimen>
+    <dimen name="activity_margin">20dp</dimen>
+    <dimen name="activity_margin_medium">30dp</dimen>
+    <dimen name="activity_margin_large">40dp</dimen>
+    <dimen name="activity_margin_xlarge">50dp</dimen>
+
+    <dimen name="activity_horizontal_margin">20dp</dimen>
+
+    <dimen name="card_padding_without_corners">18dp</dimen>
+    <dimen name="card_thumbnail_size">52dp</dimen>
+
+    <dimen name="author_image_size">72dp</dimen>
+
+    <!-- The default letter tile text size (relative to the height of the tile) -->
+    <item name="tile_letter_font_size_scale" type="dimen" format="float">0.80</item>
+
+    <dimen name="drawer_width">240dp</dimen>
+    <dimen name="divider_size">1dp</dimen>
+
+    <!-- FAB Menu -->
+    <dimen name="fab_recyclerview_padding">92dp</dimen> <!-- 52dp (FAB size) + 2x fab_base_vertical_offset) -->
+</resources>

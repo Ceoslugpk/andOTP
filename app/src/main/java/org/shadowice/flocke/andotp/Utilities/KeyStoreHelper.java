@@ -80,7 +80,7 @@ public class KeyStoreHelper {
                         .setCertificateNotBefore(start.getTime())
                         .setCertificateNotAfter(end.getTime())
                         .build();
-            } else {
+            } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR2) {
                 spec = new KeyPairGeneratorSpec.Builder(context)
                         .setAlias(alias)
                         .setSubject(new X500Principal("CN=" + alias))
@@ -88,6 +88,8 @@ public class KeyStoreHelper {
                         .setStartDate(start.getTime())
                         .setEndDate(end.getTime())
                         .build();
+            } else {
+                return null;
             }
 
             KeyPairGenerator gen = KeyPairGenerator.getInstance("RSA", "AndroidKeyStore");

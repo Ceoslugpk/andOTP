@@ -35,9 +35,15 @@ public class StorageAccessHelper {
     public static String getContentFileName(Context context, Uri uri) {
         String result = null;
         if (uri.getScheme().equals("content")) {
-            try (Cursor cursor = context.getContentResolver().query(uri, null, null, null, null)) {
+            Cursor cursor = null;
+            try {
+                cursor = context.getContentResolver().query(uri, null, null, null, null);
                 if (cursor != null && cursor.moveToFirst()) {
                     result = cursor.getString(cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME));
+                }
+            } finally {
+                if (cursor != null) {
+                    cursor.close();
                 }
             }
         }
@@ -52,11 +58,13 @@ public class StorageAccessHelper {
     }
 
     public static boolean saveFile(Context context, Uri file, String data) {
-        return saveFile(context, file, data.getBytes(StandardCharsets.UTF_8));
+        return saveFile(context, file, data.getBytes(java.nio.charset.Charset.forName("UTF-8")));
     }
 
     public static byte[] loadFile(Context context, Uri file) throws IOException {
-        try (InputStream inputStream = context.getContentResolver().openInputStream(file)) {
+        InputStream inputStream = null;
+        try {
+            inputStream = context.getContentResolver().openInputStream(file);
             ByteArrayOutputStream bytes = new ByteArrayOutputStream();
 
             byte[] buffer = new byte[1024];
@@ -67,6 +75,10 @@ public class StorageAccessHelper {
             }
 
             return bytes.toByteArray();
+        } finally {
+            if (inputStream != null) {
+                inputStream.close();
+            }
         }
     }
 
@@ -75,7 +87,7 @@ public class StorageAccessHelper {
 
         try {
             byte[] content = loadFile(context, file);
-            result = new String(content, StandardCharsets.UTF_8);
+            result = new String(content, java.nio.charset.Charset.forName("UTF-8"));
         } catch (IOException e) {
             e.printStackTrace();
         }

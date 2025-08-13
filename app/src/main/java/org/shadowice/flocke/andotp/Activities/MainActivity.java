@@ -43,6 +43,7 @@ import androidx.drawerlayout.widget.DrawerLayout;
 import androidx.appcompat.app.ActionBarDrawerToggle;
 import androidx.lifecycle.DefaultLifecycleObserver;
 import androidx.lifecycle.LifecycleOwner;
+import androidx.core.app.ActivityCompat;
 import androidx.lifecycle.ProcessLifecycleOwner;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -143,14 +144,20 @@ public class MainActivity extends BaseActivity
         AuthMethod authMethod = settings.getAuthMethod();
 
         if (authMethod == AuthMethod.DEVICE) {
-            KeyguardManager km = (KeyguardManager) getSystemService(KEYGUARD_SERVICE);
+            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.LOLLIPOP) {
+                KeyguardManager km = (KeyguardManager) getSystemService(KEYGUARD_SERVICE);
 
-            assert km != null;      // The KEYGUARD_SERVICE should always be available
-            if (km.isKeyguardSecure()) {
-                Intent authIntent = km.createConfirmDeviceCredentialIntent(getString(R.string.dialog_title_auth), getString(R.string.dialog_msg_auth));
-                startActivityForResult(authIntent, Constants.INTENT_MAIN_AUTHENTICATE);
+                assert km != null;      // The KEYGUARD_SERVICE should always be available
+                if (km.isKeyguardSecure()) {
+                    Intent authIntent = km.createConfirmDeviceCredentialIntent(getString(R.string.dialog_title_auth), getString(R.string.dialog_msg_auth));
+                    startActivityForResult(authIntent, Constants.INTENT_MAIN_AUTHENTICATE);
+                }
+            } else {
+                authMethod = AuthMethod.PASSWORD;
             }
-        } else if (authMethod == AuthMethod.PASSWORD || authMethod == AuthMethod.PIN) {
+        }
+
+        if (authMethod == AuthMethod.PASSWORD || authMethod == AuthMethod.PIN) {
             Intent authIntent = new Intent(this, AuthenticateActivity.class);
             authIntent.putExtra(Constants.EXTRA_AUTH_MESSAGE, messageId);
             startActivityForResult(authIntent, Constants.INTENT_MAIN_AUTHENTICATE);
@@ -183,10 +190,19 @@ public class MainActivity extends BaseActivity
     }
 
     private void checkAutomaticTime() {
-        int autoTime = Settings.Global.getInt(getContentResolver(), Settings.Global.AUTO_TIME, 0);
+        try {
+            int autoTime;
+            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.JELLY_BEAN_MR1) {
+                autoTime = Settings.Global.getInt(getContentResolver(), Settings.Global.AUTO_TIME, 0);
+            } else {
+                autoTime = Settings.System.getInt(getContentResolver(), Settings.System.AUTO_TIME, 0);
+            }
 
-        if (autoTime == 0)
-            HideableDialog.ShowHidableDialog(this, R.string.dialog_title_auto_time, R.string.dialog_msg_auto_time, R.string.settings_key_dialog_hide_auto_time);
+            if (autoTime == 0)
+                HideableDialog.ShowHidableDialog(this, R.string.dialog_title_auto_time, R.string.dialog_msg_auto_time, R.string.settings_key_dialog_hide_auto_time);
+        } catch (Settings.SettingNotFoundException e) {
+            e.printStackTrace();
+        }
     }
 
     // Initialize the main application
@@ -537,7 +553,7 @@ public class MainActivity extends BaseActivity
         } else if (requestCode == Constants.INTENT_MAIN_AUTHENTICATE) {
             if (resultCode != RESULT_OK) {
                 Toast.makeText(getBaseContext(), R.string.toast_auth_failed_fatal, Toast.LENGTH_LONG).show();
-                finishAndRemoveTask();
+                ActivityCompat.finishAffinity(this);
             } else {
                 requireAuthentication = false;
 
@@ -568,7 +584,7 @@ public class MainActivity extends BaseActivity
 
                 afterAuthentication();
             } else {
-                finishAndRemoveTask();
+                ActivityCompat.finishAffinity(this);
             }
         }
     }
@@ -927,7 +943,12 @@ public class MainActivity extends BaseActivity
 
     @SuppressWarnings("SameParameterValue")
     private void showOpenFileSelector(int intentId){
-        Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
+        Intent intent;
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.KITKAT) {
+            intent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
+        } else {
+            intent = new Intent(Intent.ACTION_GET_CONTENT);
+        }
         intent.addCategory(Intent.CATEGORY_OPENABLE);
         intent.setType("image/*");
         startActivityForResult(intent, intentId);
